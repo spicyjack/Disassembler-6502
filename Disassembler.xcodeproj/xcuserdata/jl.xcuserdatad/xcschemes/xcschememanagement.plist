@@ -19,10 +19,25 @@
 			<key>orderHint</key>
 			<integer>3</integer>
 		</dict>
-		<key>Disassembler (simple).xcscheme_^#shared#^_</key>
+		<key>Disassembler (simple 001).xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>4</integer>
+		</dict>
+		<key>Disassembler (simple 002).xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>5</integer>
+		</dict>
+		<key>Disassembler (simple 003).xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>6</integer>
+		</dict>
+		<key>Disassembler (simple 004).xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>7</integer>
 		</dict>
 		<key>Disassembler.xcscheme_^#shared#^_</key>
 		<dict>

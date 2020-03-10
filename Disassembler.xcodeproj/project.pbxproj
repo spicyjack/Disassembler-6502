@@ -26,6 +26,9 @@
 /* Begin PBXFileReference section */
 		6881FDAA24181A49005C4605 /* 0002.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0002.6502; sourceTree = "<group>"; };
 		6881FDAB24181D76005C4605 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		6881FDAC241820DE005C4605 /* 0003.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0003.6502; sourceTree = "<group>"; };
+		6881FDAD241823CA005C4605 /* 0004.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0004.6502; sourceTree = "<group>"; };
+		6881FDAE241824C3005C4605 /* 0005.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0005.6502; sourceTree = "<group>"; };
 		68EA2C952416970E00898397 /* Disassembler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Disassembler; sourceTree = BUILT_PRODUCTS_DIR; };
 		68EA2C982416970E00898397 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		68EA2CA324169AB900898397 /* 0001.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0001.6502; sourceTree = "<group>"; };
@@ -74,6 +77,9 @@
 			children = (
 				68EA2CA324169AB900898397 /* 0001.6502 */,
 				6881FDAA24181A49005C4605 /* 0002.6502 */,
+				6881FDAC241820DE005C4605 /* 0003.6502 */,
+				6881FDAD241823CA005C4605 /* 0004.6502 */,
+				6881FDAE241824C3005C4605 /* 0005.6502 */,
 			);
 			path = Inputs;
 			sourceTree = "<group>";
