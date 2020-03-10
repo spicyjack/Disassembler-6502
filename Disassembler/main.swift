@@ -281,6 +281,11 @@ struct DisassemblerIterator: IteratorProtocol {
 
 
 func disassemble(data: Data) {
+    func asAddress(_ bytes: [ UInt8 ]) -> UInt16 {
+        return UInt16(bytes[1]) * 0x100 + UInt16(bytes[0])
+    }
+    
+    
     let disassembler = DisassemblerSequence(data: data)
     var currentAddress = startAddress
     
@@ -309,19 +314,19 @@ func disassemble(data: Data) {
             print(name, terminator: " ")
             switch mode {
             case .absolute:
-                print(String(format: "$%04x", UInt16(arguments[1]) * 0x100 + UInt16(arguments[0])), terminator: " ")
+                print(String(format: "$%04x", asAddress(arguments)), terminator: " ")
                 
             case .absoluteX:
-                print(String(format: "$%04x,X", UInt16(arguments[1]) * 0x100 + UInt16(arguments[0])), terminator: " ")
+                print(String(format: "$%04x,X", asAddress(arguments)), terminator: " ")
                 
             case .absoluteY:
-                print(String(format: "$%04x,Y", UInt16(arguments[1]) * 0x100 + UInt16(arguments[0])), terminator: " ")
+                print(String(format: "$%04x,Y", asAddress(arguments)), terminator: " ")
                 
             case .immediate:
                 print(String(format: "#$%02x", arguments[0]), terminator: " ")
                 
             case .indirect:
-                print(String(format: "($%04x)", UInt16(arguments[1]) * 0x100 + UInt16(arguments[0])), terminator: " ")
+                print(String(format: "($%04x)", asAddress(arguments)), terminator: " ")
                 
             case .indirectX:
                 print(String(format: "($%02x,X)", arguments[0]), terminator: " ")
@@ -330,7 +335,13 @@ func disassemble(data: Data) {
                 print(String(format: "($%02x),Y", arguments[0]), terminator: " ")
                 
             case .relative:
-                print(String(format: "$%02x", arguments[0]), terminator: " ")
+                /* In both branches below, we add 2 to the resulting address because we haven't incremented currentAddress yet.
+                 */
+                if arguments[0] < 128 {
+                    print(String(format: "$%04x", currentAddress + UInt16(arguments[0]) + 2), terminator: " ")
+                } else {
+                    print(String(format: "$%04x", currentAddress - (0x100 - UInt16(arguments[0])) + 2), terminator: " ")
+                }
                 
             case .zeroPage:
                 print(String(format: "$%02x", arguments[0]), terminator: " ")
