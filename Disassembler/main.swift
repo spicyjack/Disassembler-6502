@@ -40,7 +40,7 @@ let addressingModeSizes: [ AddressingMode: UInt8 ] = [ .absolute: 3,
                                                        .zeroPageY: 2 ]
 
 
-typealias OpCodePrototype = (id: UInt8, name: String, mode: AddressingMode)
+typealias OpCodePrototype = ( id: UInt8, name: String, mode: AddressingMode )
 
 let opCodesPrototypes: [OpCodePrototype] = [ ( 0x00, "BRK", .implied ),
                                              ( 0x01, "ORA", .indirectX ),
@@ -281,84 +281,155 @@ struct DisassemblerIterator: IteratorProtocol {
 
 
 func disassemble(data: Data) {
-    func asAddress(_ bytes: [ UInt8 ]) -> UInt16 {
-        return UInt16(bytes[1]) * 0x100 + UInt16(bytes[0])
+    enum Argument {
+        case empty
+        case completed(value: String)
+        case addressing(template: String, address: UInt16)
     }
     
-    
+    typealias AddressedOpCode = ( address: UInt16, opCode: OpCode )
+    typealias FormattedOpCode = ( address: UInt16, formattedAddress: String, hexDump: String, name: String, argument: Argument )
+
     let disassembler = DisassemblerSequence(data: data)
     var currentAddress = startAddress
+    var opCodes = [ FormattedOpCode ]()
     
-    for datum in disassembler {
-        print(String(format: "%04x: ", currentAddress), terminator: "")
-        switch datum {
-        case .none(let value):
-            print (String(format: "$%02x ", value))
+    var targettableAddresses = Set<UInt16>()
+    var targettedAddresses = Set<UInt16>()
+
+    func augment(opCode: OpCode) -> ( address: UInt16, OpCode ) {
+        let opCodeAddress = currentAddress
+        
+        switch opCode {
+        case .none:
             currentAddress += 1
             
-        case .opCode(let id, let name, let mode, let arguments):
-            print(String(format: "%02x", id), terminator: " ")
-            switch addressingModeSizes[mode] {
-            case 1:
-                print("      ", terminator: "");
-                
-            case 2:
-                print(String(format: "%02x", arguments[0]), terminator: "    ")
-                
-            case 3:
-                print(String(format: "%02x %02x", arguments[0], arguments[1]), terminator: " ")
-                
-            default:
-                assertionFailure()
-            }
-            print(name, terminator: " ")
-            switch mode {
-            case .absolute:
-                print(String(format: "$%04x", asAddress(arguments)), terminator: " ")
-                
-            case .absoluteX:
-                print(String(format: "$%04x,X", asAddress(arguments)), terminator: " ")
-                
-            case .absoluteY:
-                print(String(format: "$%04x,Y", asAddress(arguments)), terminator: " ")
-                
-            case .immediate:
-                print(String(format: "#$%02x", arguments[0]), terminator: " ")
-                
-            case .indirect:
-                print(String(format: "($%04x)", asAddress(arguments)), terminator: " ")
-                
-            case .indirectX:
-                print(String(format: "($%02x,X)", arguments[0]), terminator: " ")
-                
-            case .indirectY:
-                print(String(format: "($%02x),Y", arguments[0]), terminator: " ")
-                
-            case .relative:
-                /* In both branches below, we add 2 to the resulting address because we haven't incremented currentAddress yet.
-                 */
-                if arguments[0] < 128 {
-                    print(String(format: "$%04x", currentAddress + UInt16(arguments[0]) + 2), terminator: " ")
-                } else {
-                    print(String(format: "$%04x", currentAddress - (0x100 - UInt16(arguments[0])) + 2), terminator: " ")
-                }
-                
-            case .zeroPage:
-                print(String(format: "$%02x", arguments[0]), terminator: " ")
-                
-            case .zeroPageX:
-                print(String(format: "$%02x,X", arguments[0]), terminator: " ")
-                
-            case .zeroPageY:
-                print(String(format: "$%02x,Y", arguments[0]), terminator: " ")
-                
-            default:
-                print("", terminator: "")
-            }
-            print()
+        case .opCode(_, _, let mode, _):
             currentAddress += UInt16(addressingModeSizes[mode]!)
         }
+        
+        targettableAddresses.insert(opCodeAddress)
+        
+        return ( opCodeAddress, opCode )
     }
+    
+    func constructAndInternAddress(bytes: [ UInt8 ]) -> UInt16 {
+        let address = bytes.reversed().reduce(0x00, { accumulatedAddress, byte in
+            accumulatedAddress * 0x100 + UInt16(byte)
+        })
+
+        targettedAddresses.insert(address)
+        
+        return address
+    }
+    
+    func constructAndInternAddress(relative branch: UInt8, from origin: UInt16) -> UInt16 {
+        let address: UInt16 = {
+            // In both branches below, we add 2 to the resulting address because we're calculating the target from the start of the OpCode, rather than its end.
+            if branch < 128 {
+                return origin + UInt16(branch) + 2
+            } else {
+                return origin - (0x100 - UInt16(branch)) + 2
+            }
+        }()
+
+        targettedAddresses.insert(address)
+
+        return address
+    }
+
+    func formatAddressedOpCode(_ addressedOpCode: AddressedOpCode) -> FormattedOpCode {
+        func formatHexDump(id: UInt8, arguments: [ UInt8 ]) -> String {
+            return String(([id] + arguments).map({ String(format: "%02x", $0) }).joined(separator: " ")).padding(toLength: 8, withPad: " ", startingAt: 0)
+        }
+
+        let addressField = String(format: "%04x:", addressedOpCode.address)
+        var hexDumpField: String
+        var nameField = ""
+        var argumentField = Argument.empty
+        
+        switch addressedOpCode.opCode {
+        case .none(let value):
+            hexDumpField = formatHexDump(id: value, arguments: [ ])
+            
+        case .opCode(let id, let name, let mode, let arguments):
+            hexDumpField = formatHexDump(id: id, arguments: arguments)
+            nameField = name
+            argumentField = { () -> Argument in
+                switch mode {
+                case .absolute:
+                    return .addressing(template: "%@", address: constructAndInternAddress(bytes: arguments))
+                    
+                case .absoluteX:
+                    return .addressing(template: "%@,X", address: constructAndInternAddress(bytes: arguments))
+                    
+                case .absoluteY:
+                    return .addressing(template: "%@,Y", address: constructAndInternAddress(bytes: arguments))
+                    
+                case .immediate:
+                    return .completed(value: String(format: "#$%02x", arguments[0]))
+                    
+                case .indirect:
+                    return .addressing(template:"(%@)", address: constructAndInternAddress(bytes: arguments))
+                    
+                case .indirectX:
+                    return .addressing(template: "(%@,X)", address: constructAndInternAddress(bytes: arguments))
+                    
+                case .indirectY:
+                    return .addressing(template: "(%@),Y", address: constructAndInternAddress(bytes: arguments))
+                    
+                case .relative:
+                    return .addressing(template: "%@", address: constructAndInternAddress(relative: arguments[0], from: addressedOpCode.address))
+                    
+                case .zeroPage:
+                    return .addressing(template: "%@", address: constructAndInternAddress(bytes: arguments))
+                    
+                case .zeroPageX:
+                    return .addressing(template: "%@,X", address: constructAndInternAddress(bytes: arguments))
+                    
+                case .zeroPageY:
+                    return .addressing(template: "%@,Y", address: constructAndInternAddress(bytes: arguments))
+                    
+                default:
+                    return .empty
+                }
+            }()
+        }
+        
+        return ( address: addressedOpCode.address, formattedAddress: addressField, hexDump: hexDumpField, name: nameField, argument: argumentField )
+    }
+
+    opCodes.append(contentsOf: disassembler.map { opCode in formatAddressedOpCode(augment(opCode: opCode)) })
+
+    let labels = targettableAddresses
+        .intersection(targettedAddresses)
+        .sorted()
+        .enumerated()
+        .map { enumeratedAddress in ( address: enumeratedAddress.element, label: String(format: "L%04x", enumeratedAddress.offset) ) }
+
+    opCodes.forEach { opCode in
+        if let label = labels.first(where: { label in label.address == opCode.address }) {
+            print(label.label, terminator: " ")
+        } else {
+            print("      ", terminator: "")
+        }
+        print(opCode.formattedAddress, opCode.hexDump, opCode.name, terminator: " ")
+        switch opCode.argument {
+        case .empty:
+            print("")
+            
+        case .completed(let value):
+            print(value)
+            
+        case .addressing(let template, let address):
+            if let label = labels.first(where: { label in label.address == address }) {
+                print(String(format: template, label.label))
+            } else {
+                print(String(format: template, String(format: "$%04x", address)))
+            }
+        }
+    }
+    
 }
 
 Disassembler.main()
