@@ -28,14 +28,6 @@ struct Disassembler: ParsableCommand {
     }
 }
 
-struct DisassemblerSequence: Sequence {
-    let data: Data
-    
-    func makeIterator() -> DisassemblerIterator {
-        return DisassemblerIterator(self.data)
-    }
-}
-
 struct DisassemblerIterator: IteratorProtocol {
     let data: Data
     var index: Int = 0
@@ -50,7 +42,6 @@ struct DisassemblerIterator: IteratorProtocol {
         return opCode
     }
     
-    @discardableResult
     mutating func consume(_ required: UInt8) -> [UInt8] {
         var values = [UInt8]()
         
@@ -61,11 +52,11 @@ struct DisassemblerIterator: IteratorProtocol {
         return values
     }
     
-    func hasAtLeast(_ required: UInt8) -> Bool {
-        return index + Int(required) <= data.count
-    }
-    
     mutating func next() -> OpCode? {
+        func hasAtLeast(_ required: UInt8) -> Bool {
+            return index + Int(required) <= data.count
+        }
+        
         while index < data.count {
             if let opCodePrototype = opCodesPrototypes.first(where: { $0.id == data[index] }) {
                 let size = addressingModeSizes[opCodePrototype.mode]!
@@ -87,6 +78,13 @@ struct DisassemblerIterator: IteratorProtocol {
     }
 }
 
+struct DisassemblerSequence: Sequence {
+    let data: Data
+    
+    func makeIterator() -> DisassemblerIterator {
+        return DisassemblerIterator(self.data)
+    }
+}
 
 func disassemble(data: Data) {
     enum Argument {
@@ -241,4 +239,3 @@ func disassemble(data: Data) {
 }
 
 Disassembler.main()
-
