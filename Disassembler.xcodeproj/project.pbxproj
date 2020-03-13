@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		680B05A8241BE23000E6C35B /* OpCodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 680B05A7241BE23000E6C35B /* OpCodes.swift */; };
 		68EA2C992416970E00898397 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68EA2C982416970E00898397 /* main.swift */; };
 		68EA2CA1241697A600898397 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 68EA2CA0241697A600898397 /* ArgumentParser */; };
 /* End PBXBuildFile section */
@@ -24,6 +25,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		680B05A7241BE23000E6C35B /* OpCodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpCodes.swift; sourceTree = "<group>"; };
 		6881FDAA24181A49005C4605 /* 0002.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0002.6502; sourceTree = "<group>"; };
 		6881FDAB24181D76005C4605 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		6881FDAC241820DE005C4605 /* 0003.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0003.6502; sourceTree = "<group>"; };
@@ -68,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				68EA2C982416970E00898397 /* main.swift */,
+				680B05A7241BE23000E6C35B /* OpCodes.swift */,
 			);
 			path = Disassembler;
 			sourceTree = "<group>";
@@ -148,6 +151,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				680B05A8241BE23000E6C35B /* OpCodes.swift in Sources */,
 				68EA2C992416970E00898397 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
