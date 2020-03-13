@@ -195,5 +195,5 @@ let opCodesPrototypes: [OpCodePrototype] = [ ( 0x00, "BRK", .implied ),
 
 enum OpCode {
     case opCode(id: UInt8, name: String, mode: AddressingMode, arguments: [UInt8])
-    case none(value: UInt8)
+    case none(value: [UInt8])
 }

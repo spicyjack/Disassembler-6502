@@ -36,9 +36,29 @@ struct DisassemblerIterator: IteratorProtocol {
         self.data = data
     }
     
+    func hasAtLeast(_ required: UInt8) -> Bool {
+        return index + Int(required) <= data.count
+    }
+    
     mutating func none() -> OpCode {
-        let opCode = OpCode.none(value: data[index])
-        index += 1
+        let groupSize = 4
+        var values = [UInt8]()
+        
+        while index < data.count && values.count < groupSize {
+            if let opCodePrototype = opCodesPrototypes.first(where: { $0.id == data[index] }) {
+                let size = addressingModeSizes[opCodePrototype.mode]!
+                if hasAtLeast(size) {
+                    break
+                } else {
+                    values.append(data[index])
+                    index += 1
+                }
+            } else {
+                values.append(data[index])
+                index += 1
+            }
+        }
+        let opCode = OpCode.none(value: values)
         return opCode
     }
     
@@ -53,18 +73,12 @@ struct DisassemblerIterator: IteratorProtocol {
     }
     
     mutating func next() -> OpCode? {
-        func hasAtLeast(_ required: UInt8) -> Bool {
-            return index + Int(required) <= data.count
-        }
-        
         while index < data.count {
             if let opCodePrototype = opCodesPrototypes.first(where: { $0.id == data[index] }) {
                 let size = addressingModeSizes[opCodePrototype.mode]!
                 if hasAtLeast(size) {
                     var arguments = consume(size)
-
                     arguments.removeFirst(1)
-
                     return OpCode.opCode(id: opCodePrototype.id, name: opCodePrototype.name, mode: opCodePrototype.mode, arguments: arguments)
                 } else {
                     return none()
@@ -73,7 +87,6 @@ struct DisassemblerIterator: IteratorProtocol {
                 return none()
             }
         }
-        
         return nil
     }
 }
@@ -113,9 +126,7 @@ func disassemble(data: Data) {
         case .opCode(_, _, let mode, _):
             currentAddress += UInt16(addressingModeSizes[mode]!)
         }
-        
         targettableAddresses.insert(opCodeAddress)
-        
         return ( opCodeAddress, opCode )
     }
     
@@ -123,9 +134,7 @@ func disassemble(data: Data) {
         let address = bytes.reversed().reduce(0x00, { accumulatedAddress, byte in
             accumulatedAddress * 0x100 + UInt16(byte)
         })
-
         targettedAddresses.insert(address)
-        
         return address
     }
     
@@ -138,15 +147,17 @@ func disassemble(data: Data) {
                 return origin - (0x100 - UInt16(branch)) + 2
             }
         }()
-
         targettedAddresses.insert(address)
-
         return address
     }
 
     func formatAddressedOpCode(_ addressedOpCode: AddressedOpCode) -> FormattedOpCode {
         func formatHexDump(id: UInt8, arguments: [ UInt8 ]) -> String {
-            return String(([id] + arguments).map({ String(format: "%02x", $0) }).joined(separator: " ")).padding(toLength: 8, withPad: " ", startingAt: 0)
+            return formatHexDump(values: ([ id ] + arguments))
+        }
+
+        func formatHexDump(values: [ UInt8 ]) -> String {
+            return String(values.map({ String(format: "%02x", $0) }).joined(separator: " ")).padding(toLength: 12, withPad: " ", startingAt: 0)
         }
 
         let addressField = String(format: "%04x:", addressedOpCode.address)
@@ -155,8 +166,8 @@ func disassemble(data: Data) {
         var argumentField = Argument.empty
         
         switch addressedOpCode.opCode {
-        case .none(let value):
-            hexDumpField = formatHexDump(id: value, arguments: [ ])
+        case .none(let values):
+            hexDumpField = formatHexDump(values: values)
             
         case .opCode(let id, let name, let mode, let arguments):
             hexDumpField = formatHexDump(id: id, arguments: arguments)
@@ -201,12 +212,11 @@ func disassemble(data: Data) {
                 }
             }()
         }
-        
         return ( address: addressedOpCode.address, formattedAddress: addressField, hexDump: hexDumpField, name: nameField, argument: argumentField )
     }
 
     opCodes.append(contentsOf: disassembler.map { opCode in formatAddressedOpCode(augment(opCode: opCode)) })
-
+    
     let labels = targettableAddresses
         .intersection(targettedAddresses)
         .sorted()
