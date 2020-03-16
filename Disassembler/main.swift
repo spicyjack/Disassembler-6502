@@ -15,6 +15,8 @@ struct UserConfiguration {
 
     var addressingModesFileName = "addressingModes.in"
     var opCodePrototypesFileName = "OpCodes.in"
+    
+    var opCodePrototypes = [ UInt8 : OpCodePrototype ]()
 }
 
 var userConfiguration = UserConfiguration()
@@ -39,7 +41,14 @@ struct Disassembler: ParsableCommand {
             throw ValidationError("Unable to parse start address \(startAddress).")
         }
         userConfiguration.startAddress = parsedStartAddress
-
+        
+        if addressingModesFileName != nil {
+            guard opCodePrototypesFileName != nil else {
+                throw ValidationError("An op-code prototypes configuration must be specified when an addressing mode configuration is specified.")
+            }
+        }
+        userConfiguration.opCodePrototypes = opCodePrototypes(addressingModes: addressingModesFileName, opCodePrototypes: opCodePrototypesFileName)
+        
         do {
             let data = try Data(contentsOf: URL(fileURLWithPath: fileName))
 
@@ -67,7 +76,7 @@ struct DisassemblerIterator: IteratorProtocol {
         var values = [UInt8]()
         
         while index < data.count && values.count < groupSize {
-            if let opCodePrototype = opCodesPrototypes[data[index]] {
+            if let opCodePrototype = userConfiguration.opCodePrototypes[data[index]] {
                 let size = opCodePrototype.mode.size
                 if hasAtLeast(size) {
                     break
@@ -95,7 +104,7 @@ struct DisassemblerIterator: IteratorProtocol {
     
     mutating func next() -> OpCode? {
         while index < data.count {
-            guard let opCodePrototype = opCodesPrototypes[data[index]] else {
+            guard let opCodePrototype = userConfiguration.opCodePrototypes[data[index]] else {
                 return none()
             }
 

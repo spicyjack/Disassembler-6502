@@ -1,13 +1,13 @@
-absolute 3
-absoluteX 3
-absoluteY 3
+absolute 3 address %@
+absoluteX 3 address %@,X
+absoluteY 3 address %@,Y
 accumulator 1 none
-immediate 2 value
+immediate 2 value #$%02x
 implied 1 none
-indirect 3
-indirectX 2
-indirectY 2
-relative 2 relative
-zeroPage 2
-zeroPageX 2
-zeroPageY 2
+indirect 3 address ($@)
+indirectX 2 address ($@,X)
+indirectY 2 address ($@),Y
+relative 2 relative %@
+zeroPage 2 address %@
+zeroPageX 2 address %@
+zeroPageY 2 address %@
