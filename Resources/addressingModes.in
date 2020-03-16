@@ -1,0 +1,13 @@
+absolute 3
+absoluteX 3
+absoluteY 3
+accumulator 1 none
+immediate 2 value
+implied 1 none
+indirect 3
+indirectX 2
+indirectY 2
+relative 2 relative
+zeroPage 2
+zeroPageX 2
+zeroPageY 2

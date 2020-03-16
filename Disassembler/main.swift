@@ -12,6 +12,9 @@ import ArgumentParser
 struct UserConfiguration {
     var fileName: String? = nil
     var startAddress: UInt16 = 0x1000
+
+    var addressingModesFileName = "addressingModes.in"
+    var opCodePrototypesFileName = "OpCodes.in"
 }
 
 var userConfiguration = UserConfiguration()
@@ -22,6 +25,12 @@ struct Disassembler: ParsableCommand {
 
     @Option(default: "0x1000", help: "Define starting address.")
     var startAddress: String
+    
+    @Option(help: "Specify path to op-code prototypes.")
+    var opCodePrototypesFileName: String?
+    
+    @Option(help: "Specify path to addressing modes.")
+    var addressingModesFileName: String?
     
     func run() throws {
         userConfiguration.fileName = fileName
@@ -58,8 +67,8 @@ struct DisassemblerIterator: IteratorProtocol {
         var values = [UInt8]()
         
         while index < data.count && values.count < groupSize {
-            if let opCodePrototype = opCodesPrototypes.first(where: { $0.id == data[index] }) {
-                let size = addressingModeSizes[opCodePrototype.mode]!
+            if let opCodePrototype = opCodesPrototypes[data[index]] {
+                let size = opCodePrototype.mode.size
                 if hasAtLeast(size) {
                     break
                 } else {
@@ -71,8 +80,7 @@ struct DisassemblerIterator: IteratorProtocol {
                 index += 1
             }
         }
-        let opCode = OpCode.none(value: values)
-        return opCode
+        return OpCode.none(value: values)
     }
     
     mutating func consume(_ required: UInt8) -> [UInt8] {
@@ -87,19 +95,20 @@ struct DisassemblerIterator: IteratorProtocol {
     
     mutating func next() -> OpCode? {
         while index < data.count {
-            guard let opCodePrototype = opCodesPrototypes.first(where: { $0.id == data[index] }) else {
+            guard let opCodePrototype = opCodesPrototypes[data[index]] else {
                 return none()
             }
 
-            let size = addressingModeSizes[opCodePrototype.mode]!
+            let size = opCodePrototype.mode.size
             
             guard hasAtLeast(size) else {
                 return none()
             }
 
+            let id = data[index]
             var arguments = consume(size)
             arguments.removeFirst(1)
-            return OpCode.opCode(id: opCodePrototype.id, name: opCodePrototype.name, mode: opCodePrototype.mode, arguments: arguments)
+            return OpCode.opCode(id: id, name: opCodePrototype.name, mode: opCodePrototype.mode, arguments: arguments)
         }
         return nil
     }
@@ -138,7 +147,7 @@ func disassemble(data: Data) {
             currentAddress += 1
             
         case .opCode(_, _, let mode, _):
-            currentAddress += UInt16(addressingModeSizes[mode]!)
+            currentAddress += UInt16(mode.size)
         }
         targettableAddresses.insert(opCodeAddress)
         return ( opCodeAddress, opCode )
@@ -187,41 +196,17 @@ func disassemble(data: Data) {
             hexDumpField = formatHexDump(id: id, arguments: arguments)
             nameField = name
             argumentField = { () -> Argument in
-                switch mode {
-                case .absolute:
-                    return .addressing(template: "%@", address: constructAndInternAddress(bytes: arguments))
-                    
-                case .absoluteX:
-                    return .addressing(template: "%@,X", address: constructAndInternAddress(bytes: arguments))
-                    
-                case .absoluteY:
-                    return .addressing(template: "%@,Y", address: constructAndInternAddress(bytes: arguments))
-                    
-                case .immediate:
-                    return .completed(value: String(format: "#$%02x", arguments[0]))
-                    
-                case .indirect:
-                    return .addressing(template:"(%@)", address: constructAndInternAddress(bytes: arguments))
-                    
-                case .indirectX:
-                    return .addressing(template: "(%@,X)", address: constructAndInternAddress(bytes: arguments))
-                    
-                case .indirectY:
-                    return .addressing(template: "(%@),Y", address: constructAndInternAddress(bytes: arguments))
+                switch mode.type {
+                case .address:
+                    return .addressing(template: mode.template, address: constructAndInternAddress(bytes: arguments))
                     
                 case .relative:
-                    return .addressing(template: "%@", address: constructAndInternAddress(relative: arguments[0], from: addressedOpCode.address))
+                    return .addressing(template: mode.template, address: constructAndInternAddress(relative: arguments[0], from: addressedOpCode.address))
                     
-                case .zeroPage:
-                    return .addressing(template: "%@", address: constructAndInternAddress(bytes: arguments))
+                case .value:
+                    return .completed(value: String(format: mode.template, arguments[0]))
                     
-                case .zeroPageX:
-                    return .addressing(template: "%@,X", address: constructAndInternAddress(bytes: arguments))
-                    
-                case .zeroPageY:
-                    return .addressing(template: "%@,Y", address: constructAndInternAddress(bytes: arguments))
-                    
-                default:
+                case .none:
                     return .empty
                 }
             }()

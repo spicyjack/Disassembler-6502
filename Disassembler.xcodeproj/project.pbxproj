@@ -33,6 +33,8 @@
 		6881FDAD241823CA005C4605 /* 0004.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0004.6502; sourceTree = "<group>"; };
 		6881FDAE241824C3005C4605 /* 0005.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0005.6502; sourceTree = "<group>"; };
 		68BEA66B241FB29600FFFD82 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
+		68BEA676241FCE4E00FFFD82 /* addressingModes.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = addressingModes.in; sourceTree = "<group>"; };
+		68BEA677241FCE4E00FFFD82 /* opCodes.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = opCodes.in; sourceTree = "<group>"; };
 		68EA2C952416970E00898397 /* Disassembler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Disassembler; sourceTree = BUILT_PRODUCTS_DIR; };
 		68EA2C982416970E00898397 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		68EA2CA324169AB900898397 /* 0001.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0001.6502; sourceTree = "<group>"; };
@@ -50,12 +52,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		68BEA678241FCE9900FFFD82 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				68BEA676241FCE4E00FFFD82 /* addressingModes.in */,
+				68BEA677241FCE4E00FFFD82 /* opCodes.in */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		68EA2C8C2416970E00898397 = {
 			isa = PBXGroup;
 			children = (
 				6881FDAB24181D76005C4605 /* README.md */,
 				68EA2CA224169A9B00898397 /* Inputs */,
 				68EA2C972416970E00898397 /* Disassembler */,
+				68BEA678241FCE9900FFFD82 /* Resources */,
 				68EA2C962416970E00898397 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -197,6 +209,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_ON_DEMAND_RESOURCES = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -258,6 +271,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_ON_DEMAND_RESOURCES = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
