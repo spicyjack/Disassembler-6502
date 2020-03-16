@@ -9,21 +9,34 @@
 import Foundation
 import ArgumentParser
 
-let startAddress: UInt16 = 0x1000
+struct UserConfiguration {
+    var fileName: String? = nil
+    var startAddress: UInt16 = 0x1000
+}
+
+var userConfiguration = UserConfiguration()
 
 struct Disassembler: ParsableCommand {
-    @Argument(help: "file name")
+    @Argument(help: "Specify input file name.")
     var fileName: String
+
+    @Option(default: "0x1000", help: "Define starting address.")
+    var startAddress: String
     
     func run() throws {
-        let url = URL(fileURLWithPath: fileName)
+        userConfiguration.fileName = fileName
+
+        guard let parsedStartAddress = fromHex(address: startAddress) else {
+            throw ValidationError("Unable to parse start address \(startAddress).")
+        }
+        userConfiguration.startAddress = parsedStartAddress
 
         do {
-            let data = try Data(contentsOf: url)
+            let data = try Data(contentsOf: URL(fileURLWithPath: fileName))
 
             disassemble(data: data)
         } catch {
-            print("Couldn't read it!")
+            print("Unable to read \(fileName).")
         }
     }
 }
@@ -74,18 +87,19 @@ struct DisassemblerIterator: IteratorProtocol {
     
     mutating func next() -> OpCode? {
         while index < data.count {
-            if let opCodePrototype = opCodesPrototypes.first(where: { $0.id == data[index] }) {
-                let size = addressingModeSizes[opCodePrototype.mode]!
-                if hasAtLeast(size) {
-                    var arguments = consume(size)
-                    arguments.removeFirst(1)
-                    return OpCode.opCode(id: opCodePrototype.id, name: opCodePrototype.name, mode: opCodePrototype.mode, arguments: arguments)
-                } else {
-                    return none()
-                }
-            } else {
+            guard let opCodePrototype = opCodesPrototypes.first(where: { $0.id == data[index] }) else {
                 return none()
             }
+
+            let size = addressingModeSizes[opCodePrototype.mode]!
+            
+            guard hasAtLeast(size) else {
+                return none()
+            }
+
+            var arguments = consume(size)
+            arguments.removeFirst(1)
+            return OpCode.opCode(id: opCodePrototype.id, name: opCodePrototype.name, mode: opCodePrototype.mode, arguments: arguments)
         }
         return nil
     }
@@ -110,7 +124,7 @@ func disassemble(data: Data) {
     typealias FormattedOpCode = ( address: UInt16, formattedAddress: String, hexDump: String, name: String, argument: Argument )
 
     let disassembler = DisassemblerSequence(data: data)
-    var currentAddress = startAddress
+    var currentAddress = userConfiguration.startAddress
     var opCodes = [ FormattedOpCode ]()
     
     var targettableAddresses = Set<UInt16>()

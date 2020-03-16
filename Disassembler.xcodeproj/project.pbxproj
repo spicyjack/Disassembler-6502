@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		680B05A8241BE23000E6C35B /* OpCodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 680B05A7241BE23000E6C35B /* OpCodes.swift */; };
+		68BEA66C241FB29600FFFD82 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68BEA66B241FB29600FFFD82 /* Utilities.swift */; };
 		68EA2C992416970E00898397 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68EA2C982416970E00898397 /* main.swift */; };
 		68EA2CA1241697A600898397 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 68EA2CA0241697A600898397 /* ArgumentParser */; };
 /* End PBXBuildFile section */
@@ -31,6 +32,7 @@
 		6881FDAC241820DE005C4605 /* 0003.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0003.6502; sourceTree = "<group>"; };
 		6881FDAD241823CA005C4605 /* 0004.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0004.6502; sourceTree = "<group>"; };
 		6881FDAE241824C3005C4605 /* 0005.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0005.6502; sourceTree = "<group>"; };
+		68BEA66B241FB29600FFFD82 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		68EA2C952416970E00898397 /* Disassembler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Disassembler; sourceTree = BUILT_PRODUCTS_DIR; };
 		68EA2C982416970E00898397 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		68EA2CA324169AB900898397 /* 0001.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0001.6502; sourceTree = "<group>"; };
@@ -71,6 +73,7 @@
 			children = (
 				68EA2C982416970E00898397 /* main.swift */,
 				680B05A7241BE23000E6C35B /* OpCodes.swift */,
+				68BEA66B241FB29600FFFD82 /* Utilities.swift */,
 			);
 			path = Disassembler;
 			sourceTree = "<group>";
@@ -151,6 +154,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				68BEA66C241FB29600FFFD82 /* Utilities.swift in Sources */,
 				680B05A8241BE23000E6C35B /* OpCodes.swift in Sources */,
 				68EA2C992416970E00898397 /* main.swift in Sources */,
 			);
