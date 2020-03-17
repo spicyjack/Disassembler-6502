@@ -19,8 +19,6 @@ struct UserConfiguration {
     var opCodePrototypes = [ UInt8 : OpCodePrototype ]()
 }
 
-var userConfiguration = UserConfiguration()
-
 struct Disassembler: ParsableCommand {
     @Argument(help: "Specify input file name.")
     var fileName: String
@@ -35,8 +33,8 @@ struct Disassembler: ParsableCommand {
     var addressingModesFileName: String?
     
     func run() throws {
-        userConfiguration.fileName = fileName
-
+        var userConfiguration = UserConfiguration(fileName: fileName)
+        
         guard let parsedStartAddress = fromHex(address: startAddress) else {
             throw ValidationError("Unable to parse start address \(startAddress).")
         }
@@ -54,7 +52,7 @@ struct Disassembler: ParsableCommand {
             let data = try Data(contentsOf: URL(fileURLWithPath: fileName))
             var outputStream = FileHandleOutputStream(fileHandle: FileHandle.standardOutput)
             
-            disassemble(data: data, to: &outputStream)
+            disassemble(data: data, to: &outputStream, configuration: userConfiguration)
         } catch {
             print("Unable to read \(fileName).")
         }
@@ -63,11 +61,9 @@ struct Disassembler: ParsableCommand {
 
 struct DisassemblerIterator: IteratorProtocol {
     let data: Data
-    var index: Int = 0
+    let userConfiguration: UserConfiguration
     
-    init(_ data: Data) {
-        self.data = data
-    }
+    var index: Int = 0
     
     func hasAtLeast(_ required: UInt8) -> Bool {
         return index + Int(required) <= data.count
@@ -127,13 +123,14 @@ struct DisassemblerIterator: IteratorProtocol {
 
 struct DisassemblerSequence: Sequence {
     let data: Data
+    let userConfiguration: UserConfiguration
     
     func makeIterator() -> DisassemblerIterator {
-        return DisassemblerIterator(self.data)
+        return DisassemblerIterator(data: self.data, userConfiguration: self.userConfiguration)
     }
 }
 
-func disassemble(data: Data, to outputStream: inout FileHandleOutputStream) {
+func disassemble(data: Data, to outputStream: inout FileHandleOutputStream, configuration userConfiguration: UserConfiguration) {
     enum Argument {
         case empty
         case completed(value: String)
@@ -143,7 +140,7 @@ func disassemble(data: Data, to outputStream: inout FileHandleOutputStream) {
     typealias AddressedOpCode = ( address: UInt16, opCode: OpCode )
     typealias FormattedOpCode = ( address: UInt16, formattedAddress: String, hexDump: String, name: String, argument: Argument )
 
-    let disassembler = DisassemblerSequence(data: data)
+    let disassembler = DisassemblerSequence(data: data, userConfiguration: userConfiguration)
     var currentAddress = userConfiguration.startAddress
     var opCodes = [ FormattedOpCode ]()
     
