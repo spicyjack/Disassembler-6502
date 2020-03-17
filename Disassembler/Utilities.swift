@@ -23,3 +23,11 @@ func fromHex(value: String) -> UInt8? {
         return UInt8(value)
     }
 }
+
+func onEachLine(of fileName: String, _ continuation: (Int, String) -> ()) throws {
+    let numberedLines = try String(contentsOfFile: fileName).split { $0.isNewline }.enumerated()
+    
+    for ( number, line ) in numberedLines {
+        continuation(number, String(line))
+    }
+}

@@ -47,7 +47,8 @@ struct Disassembler: ParsableCommand {
                 throw ValidationError("An op-code prototypes configuration must be specified when an addressing mode configuration is specified.")
             }
         }
-        userConfiguration.opCodePrototypes = opCodePrototypes(addressingModes: addressingModesFileName, opCodePrototypes: opCodePrototypesFileName)
+        
+        userConfiguration.opCodePrototypes = try fetchOpCodePrototypes(addressingModes: addressingModesFileName, opCodePrototypes: opCodePrototypesFileName)
         
         do {
             let data = try Data(contentsOf: URL(fileURLWithPath: fileName))

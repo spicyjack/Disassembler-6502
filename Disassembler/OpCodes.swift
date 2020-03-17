@@ -19,18 +19,18 @@ typealias AddressingMode = ( size: UInt8, type: ArgumentType, template: String )
 typealias OpCodePrototype = ( name: String, mode: AddressingMode )
 
 let defaultAddressingModes: [ String: AddressingMode ] = [ "absolute" :    ( size: 3, type: .address,  template: "%@" ),
-                                                          "absoluteX" :   ( size: 3, type: .address,  template: "%@,X" ),
-                                                          "absoluteY" :   ( size: 3, type: .address,  template: "%@,Y" ),
-                                                          "accumulator" : ( size: 1, type: .none,     template: "" ),
-                                                          "immediate" :   ( size: 2, type: .value,    template: "#$%02x" ),
-                                                          "implied" :     ( size: 1, type: .none,     template: "" ),
-                                                          "indirect" :    ( size: 3, type: .address,  template: "(%@)" ),
-                                                          "indirectX" :   ( size: 2, type: .address,  template: "(%@,X)" ),
-                                                          "indirectY" :   ( size: 2, type: .address,  template: "(%@),Y" ),
-                                                          "relative" :    ( size: 3, type: .relative, template: "%@" ),
-                                                          "zeroPage" :    ( size: 2, type: .address,  template: "%@" ),
-                                                          "zeroPageX" :   ( size: 2, type: .address,  template: "%@" ),
-                                                          "zeroPageY" :   ( size: 2, type: .address,  template: "%@" ), ]
+                                                           "absoluteX" :   ( size: 3, type: .address,  template: "%@,X" ),
+                                                           "absoluteY" :   ( size: 3, type: .address,  template: "%@,Y" ),
+                                                           "accumulator" : ( size: 1, type: .none,     template: "" ),
+                                                           "immediate" :   ( size: 2, type: .value,    template: "#$%02x" ),
+                                                           "implied" :     ( size: 1, type: .none,     template: "" ),
+                                                           "indirect" :    ( size: 3, type: .address,  template: "(%@)" ),
+                                                           "indirectX" :   ( size: 2, type: .address,  template: "(%@,X)" ),
+                                                           "indirectY" :   ( size: 2, type: .address,  template: "(%@),Y" ),
+                                                           "relative" :    ( size: 3, type: .relative, template: "%@" ),
+                                                           "zeroPage" :    ( size: 2, type: .address,  template: "%@" ),
+                                                           "zeroPageX" :   ( size: 2, type: .address,  template: "%@" ),
+                                                           "zeroPageY" :   ( size: 2, type: .address,  template: "%@" ), ]
 
 let defaultOpCodePrototypes: [ UInt8 : OpCodePrototype ] = [ 0x00 : ( name: "BRK", mode: defaultAddressingModes["implied"]! ),
                                                              0x01 : ( name: "ORA", mode: defaultAddressingModes["indirectX"]! ),
@@ -184,9 +184,103 @@ let defaultOpCodePrototypes: [ UInt8 : OpCodePrototype ] = [ 0x00 : ( name: "BRK
                                                              0xfd : ( name: "SBC", mode: defaultAddressingModes["absoluteX"]! ),
                                                              0xfe : ( name: "INC", mode: defaultAddressingModes["absoluteX"]! ), ]
 
-func opCodePrototypes(addressingModes addressingModesFileName: String?,
-                      opCodePrototypes opCodePrototypesFileName: String?) -> [ UInt8 : OpCodePrototype ] {
-    return defaultOpCodePrototypes
+var addressingModes = [ String: AddressingMode ]()
+var opCodePrototypes = [ UInt8 : OpCodePrototype ]()
+
+func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
+                           opCodePrototypes opCodePrototypesFileName: String?) throws -> [ UInt8 : OpCodePrototype ] {
+    if addressingModesFileName != nil {
+        try onEachLine(of: addressingModesFileName!) { number, line in
+            let fields = line.split(separator: " ")
+            
+            guard fields.count >= 3 else {
+                print("Unable to parse line \(number + 1).")
+                return
+            }
+            
+            guard let size = UInt8(String(fields[1])) else {
+                print("Unable to parse \(fields[1]) as an integer.")
+                return
+            }
+            
+            var type: ArgumentType {
+                switch fields[2] {
+                case "relative":
+                    return .relative
+                    
+                case "value":
+                    return .value
+                    
+                case "none":
+                    return .none
+                    
+                default:
+                    return .address
+                }
+            }
+            
+            var template: String {
+                if fields.count >= 4 {
+                    return String(fields[3])
+                } else {
+                    return ""
+                }
+            }
+            
+            addressingModes[String(fields[0])] = ( size: size, type: type, template: template )
+        }
+    } else {
+        addressingModes = defaultAddressingModes
+    }
+    
+    if opCodePrototypesFileName != nil {
+        var currentOpCode: String? = nil
+
+        try onEachLine(of: opCodePrototypesFileName!) { number, line in
+            func parseOpCodePrototype(_ line: String, continuation: (_ id: UInt8, _ name: String, _ addressingMode: String) -> ()) {
+                let fields = line.split(separator: " ")
+                
+                if line.hasPrefix(" ") {
+                    guard currentOpCode != nil else {
+                        print("No current op-code on line \(number + 1).")
+                        return
+                    }
+                    
+                    guard fields.count >= 2 else {
+                        print("Unable to parse line \(number + 1).")
+                        return
+                    }
+                    
+                    guard let id = fromHex(value: String(fields[0])) else {
+                        return
+                    }
+                    
+                    continuation(id, currentOpCode!, String(fields[1]))
+                } else {
+                    guard fields.count >= 3 else {
+                        print("Unable to parse line \(number + 1).")
+                        return
+                    }
+                    
+                    guard let id = fromHex(value: String(fields[1])) else {
+                        return
+                    }
+                    
+                    currentOpCode = String(fields[0])
+                    
+                    continuation(id, currentOpCode!, String(fields[2]))
+                }
+            }
+            
+            parseOpCodePrototype(line) { id, name, addressingMode in
+                opCodePrototypes[id] = ( name: name, mode: addressingModes[addressingMode]! )
+            }
+        }
+    } else {
+        opCodePrototypes = defaultOpCodePrototypes
+    }
+    
+    return opCodePrototypes
 }
 
 enum OpCode {
