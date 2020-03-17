@@ -184,9 +184,9 @@ let defaultOpCodePrototypes: [ UInt8 : OpCodePrototype ] = [ 0x00 : ( name: "BRK
                                                              0xfd : ( name: "SBC", mode: defaultAddressingModes["absoluteX"]! ),
                                                              0xfe : ( name: "INC", mode: defaultAddressingModes["absoluteX"]! ), ]
 
-func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
-                           opCodePrototypes opCodePrototypesFileName: String?,
-                           errorsTo errorStream: inout FileHandleOutputStream) throws -> [ UInt8 : OpCodePrototype ] {
+func loadOpCodePrototypes(addressingModes addressingModesFileName: String?,
+                          opCodePrototypes opCodePrototypesFileName: String?,
+                          errorsTo errorStream: inout FileHandleOutputStream) throws -> [ UInt8 : OpCodePrototype ] {
     var addressingModes = [ String: AddressingMode ]()
     
     if addressingModesFileName != nil {

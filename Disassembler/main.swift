@@ -9,8 +9,6 @@
 import Foundation
 import ArgumentParser
 
-typealias LabelledAddress = [ UInt16 : String ]
-
 struct UserConfiguration {
     var fileName: String? = nil
     var startAddress: UInt16 = 0x1000
@@ -20,7 +18,7 @@ struct UserConfiguration {
     
     var opCodePrototypes = [ UInt8 : OpCodePrototype ]()
     
-    var labelledAddresses = LabelledAddress()
+    var labelledAddresses = LabelledAddresses()
 }
 
 struct Disassembler: ParsableCommand {
@@ -35,6 +33,9 @@ struct Disassembler: ParsableCommand {
     
     @Option(help: "Specify path to addressing modes.")
     var addressingModesFileName: String?
+    
+    @Option(help: "Specify path to pre-defined labels.")
+    var labelledAddressesFileName: String?
     
     func run() throws {
         var errorStream = FileHandleOutputStream(fileHandle: FileHandle.standardError)
@@ -52,15 +53,17 @@ struct Disassembler: ParsableCommand {
             }
         }
         
-        userConfiguration.opCodePrototypes = try fetchOpCodePrototypes(addressingModes: addressingModesFileName,
-                                                                       opCodePrototypes: opCodePrototypesFileName,
-                                                                       errorsTo: &errorStream)
+        userConfiguration.opCodePrototypes = try loadOpCodePrototypes(addressingModes: addressingModesFileName,
+                                                                      opCodePrototypes: opCodePrototypesFileName,
+                                                                      errorsTo: &errorStream)
+        userConfiguration.labelledAddresses = try loadLabelledAddresses(labelledAddresses: labelledAddressesFileName,
+                                                                        errorsTo: &errorStream)
         
         do {
             let data = try Data(contentsOf: URL(fileURLWithPath: fileName))
             var outputStream = FileHandleOutputStream(fileHandle: FileHandle.standardOutput)
             
-            disassemble(data: data, to: &outputStream, configuration: userConfiguration)
+            disassemble(data: data, outputTo: &outputStream, configuration: userConfiguration)
         } catch {
             errorStream.writeln("Unable to read \(fileName).")
         }
@@ -138,7 +141,9 @@ struct DisassemblerSequence: Sequence {
     }
 }
 
-func disassemble(data: Data, to outputStream: inout FileHandleOutputStream, configuration userConfiguration: UserConfiguration) {
+func disassemble(data: Data,
+                 outputTo outputStream: inout FileHandleOutputStream,
+                 configuration userConfiguration: UserConfiguration) {
     enum Argument {
         case empty
         case completed(value: String)
@@ -232,25 +237,9 @@ func disassemble(data: Data, to outputStream: inout FileHandleOutputStream, conf
 
     opCodes.append(contentsOf: disassembler.map { opCode in formatAddressedOpCode(augment(opCode: opCode)) })
     
-    var labelledAddresses = userConfiguration.labelledAddresses
-    var labelCounter: Int = 0
-    
-    targettableAddresses
-        .intersection(targettedAddresses)
-        .sorted()
-        .forEach { address in
-            while true {
-                let candidate = String(format: "L%04x", labelCounter)
-                
-                if labelledAddresses.values.contains(candidate) {
-                    labelCounter += 1
-                } else {
-                    labelledAddresses[address] = candidate
-                    break
-                }
-            }
-    }
-    
+    let labelledAddresses = fetchLabelledAddresses(targettableAddresses: targettableAddresses,
+                                                   targettedAddresses: targettedAddresses,
+                                                   userLabelledAddresses: userConfiguration.labelledAddresses)
     opCodes.forEach { opCode in
         if let label = labelledAddresses[opCode.address] {
             outputStream.write(label + " ")
@@ -273,6 +262,15 @@ func disassemble(data: Data, to outputStream: inout FileHandleOutputStream, conf
             }
         }
         outputStream.writeln("")
+    }
+    
+    if !labelledAddresses.isEmpty {
+        outputStream.writeln("\nLABELS")
+        labelledAddresses
+            .sorted { left, right in left.value < right.value }
+            .forEach { element in
+                outputStream.writeln(String(format: "      %@: $%04x", element.value, element.key))
+        }
     }
 }
 

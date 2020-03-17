@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		680B05A8241BE23000E6C35B /* OpCodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 680B05A7241BE23000E6C35B /* OpCodes.swift */; };
 		68BEA66C241FB29600FFFD82 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68BEA66B241FB29600FFFD82 /* Utilities.swift */; };
+		68BEA67A2421638F00FFFD82 /* Labels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68BEA6792421638F00FFFD82 /* Labels.swift */; };
 		68EA2C992416970E00898397 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68EA2C982416970E00898397 /* main.swift */; };
 		68EA2CA1241697A600898397 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 68EA2CA0241697A600898397 /* ArgumentParser */; };
 /* End PBXBuildFile section */
@@ -35,6 +36,8 @@
 		68BEA66B241FB29600FFFD82 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		68BEA676241FCE4E00FFFD82 /* addressingModes.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = addressingModes.in; sourceTree = "<group>"; };
 		68BEA677241FCE4E00FFFD82 /* opCodes.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = opCodes.in; sourceTree = "<group>"; };
+		68BEA6792421638F00FFFD82 /* Labels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Labels.swift; sourceTree = "<group>"; };
+		68BEA67B24216B2600FFFD82 /* 0005.labels */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0005.labels; sourceTree = "<group>"; };
 		68EA2C952416970E00898397 /* Disassembler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Disassembler; sourceTree = BUILT_PRODUCTS_DIR; };
 		68EA2C982416970E00898397 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		68EA2CA324169AB900898397 /* 0001.6502 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 0001.6502; sourceTree = "<group>"; };
@@ -84,6 +87,7 @@
 			isa = PBXGroup;
 			children = (
 				68EA2C982416970E00898397 /* main.swift */,
+				68BEA6792421638F00FFFD82 /* Labels.swift */,
 				680B05A7241BE23000E6C35B /* OpCodes.swift */,
 				68BEA66B241FB29600FFFD82 /* Utilities.swift */,
 			);
@@ -98,6 +102,7 @@
 				6881FDAC241820DE005C4605 /* 0003.6502 */,
 				6881FDAD241823CA005C4605 /* 0004.6502 */,
 				6881FDAE241824C3005C4605 /* 0005.6502 */,
+				68BEA67B24216B2600FFFD82 /* 0005.labels */,
 			);
 			path = Inputs;
 			sourceTree = "<group>";
@@ -168,6 +173,7 @@
 			files = (
 				68BEA66C241FB29600FFFD82 /* Utilities.swift in Sources */,
 				680B05A8241BE23000E6C35B /* OpCodes.swift in Sources */,
+				68BEA67A2421638F00FFFD82 /* Labels.swift in Sources */,
 				68EA2C992416970E00898397 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
