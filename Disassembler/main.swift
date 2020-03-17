@@ -9,6 +9,8 @@
 import Foundation
 import ArgumentParser
 
+typealias LabelledAddress = [ UInt16 : String ]
+
 struct UserConfiguration {
     var fileName: String? = nil
     var startAddress: UInt16 = 0x1000
@@ -17,6 +19,8 @@ struct UserConfiguration {
     var opCodePrototypesFileName = "OpCodes.in"
     
     var opCodePrototypes = [ UInt8 : OpCodePrototype ]()
+    
+    var labelledAddresses = LabelledAddress()
 }
 
 struct Disassembler: ParsableCommand {
@@ -228,15 +232,28 @@ func disassemble(data: Data, to outputStream: inout FileHandleOutputStream, conf
 
     opCodes.append(contentsOf: disassembler.map { opCode in formatAddressedOpCode(augment(opCode: opCode)) })
     
-    let labels = targettableAddresses
+    var labelledAddresses = userConfiguration.labelledAddresses
+    var labelCounter: Int = 0
+    
+    targettableAddresses
         .intersection(targettedAddresses)
         .sorted()
-        .enumerated()
-        .map { enumeratedAddress in ( address: enumeratedAddress.element, label: String(format: "L%04x", enumeratedAddress.offset) ) }
-
+        .forEach { address in
+            while true {
+                let candidate = String(format: "L%04x", labelCounter)
+                
+                if labelledAddresses.values.contains(candidate) {
+                    labelCounter += 1
+                } else {
+                    labelledAddresses[address] = candidate
+                    break
+                }
+            }
+    }
+    
     opCodes.forEach { opCode in
-        if let label = labels.first(where: { label in label.address == opCode.address }) {
-            outputStream.write(label.label + " ")
+        if let label = labelledAddresses[opCode.address] {
+            outputStream.write(label + " ")
         } else {
             outputStream.write("      ")
         }
@@ -249,8 +266,8 @@ func disassemble(data: Data, to outputStream: inout FileHandleOutputStream, conf
             outputStream.write(value)
             
         case .addressing(let template, let address):
-            if let label = labels.first(where: { label in label.address == address }) {
-                outputStream.write(String(format: template, label.label))
+            if let label = labelledAddresses[address] {
+                outputStream.write(String(format: template, label))
             } else {
                 outputStream.write(String(format: template, String(format: "$%04x", address)))
             }
