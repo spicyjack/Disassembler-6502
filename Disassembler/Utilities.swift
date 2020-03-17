@@ -31,3 +31,14 @@ func onEachLine(of fileName: String, _ continuation: (Int, String) -> ()) throws
         continuation(number, String(line))
     }
 }
+
+struct FileHandleOutputStream: TextOutputStream {
+    var fileHandle: FileHandle
+
+    func write(_ string: String) {
+        guard let data = string.data(using: .utf8) else {
+            return
+        }
+        fileHandle.write(data)
+    }
+}

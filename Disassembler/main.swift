@@ -52,8 +52,9 @@ struct Disassembler: ParsableCommand {
         
         do {
             let data = try Data(contentsOf: URL(fileURLWithPath: fileName))
-
-            disassemble(data: data)
+            var outputStream = FileHandleOutputStream(fileHandle: FileHandle.standardOutput)
+            
+            disassemble(data: data, to: &outputStream)
         } catch {
             print("Unable to read \(fileName).")
         }
@@ -132,7 +133,7 @@ struct DisassemblerSequence: Sequence {
     }
 }
 
-func disassemble(data: Data) {
+func disassemble(data: Data, to outputStream: inout FileHandleOutputStream) {
     enum Argument {
         case empty
         case completed(value: String)
@@ -234,27 +235,27 @@ func disassemble(data: Data) {
 
     opCodes.forEach { opCode in
         if let label = labels.first(where: { label in label.address == opCode.address }) {
-            print(label.label, terminator: " ")
+            outputStream.write(label.label + " ")
         } else {
-            print("      ", terminator: "")
+            outputStream.write("      ")
         }
-        print(opCode.formattedAddress, opCode.hexDump, opCode.name, terminator: " ")
+        outputStream.write([ opCode.formattedAddress, opCode.hexDump, opCode.name].joined(separator: " ") + " ")
         switch opCode.argument {
         case .empty:
-            print("")
-            
+            break
+
         case .completed(let value):
-            print(value)
+            outputStream.write(value)
             
         case .addressing(let template, let address):
             if let label = labels.first(where: { label in label.address == address }) {
-                print(String(format: template, label.label))
+                outputStream.write(String(format: template, label.label))
             } else {
-                print(String(format: template, String(format: "$%04x", address)))
+                outputStream.write(String(format: template, String(format: "$%04x", address)))
             }
         }
+        outputStream.write("\n")
     }
-    
 }
 
 Disassembler.main()
