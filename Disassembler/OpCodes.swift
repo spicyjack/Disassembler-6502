@@ -185,7 +185,8 @@ let defaultOpCodePrototypes: [ UInt8 : OpCodePrototype ] = [ 0x00 : ( name: "BRK
                                                              0xfe : ( name: "INC", mode: defaultAddressingModes["absoluteX"]! ), ]
 
 func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
-                           opCodePrototypes opCodePrototypesFileName: String?) throws -> [ UInt8 : OpCodePrototype ] {
+                           opCodePrototypes opCodePrototypesFileName: String?,
+                           errorsTo errorStream: inout FileHandleOutputStream) throws -> [ UInt8 : OpCodePrototype ] {
     var addressingModes = [ String: AddressingMode ]()
     
     if addressingModesFileName != nil {
@@ -193,12 +194,12 @@ func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
             let fields = line.split(separator: " ")
             
             guard fields.count >= 3 else {
-                print("Unable to parse line \(number + 1) of \(addressingModesFileName!).")
+                errorStream.writeln("Unable to parse line \(number + 1) of \(addressingModesFileName!).")
                 return
             }
             
             guard let size = UInt8(String(fields[1])) else {
-                print("Unable to parse \(fields[1]) as an integer, on line \(number + 1) of \(addressingModesFileName!).")
+                errorStream.writeln("Unable to parse \(fields[1]) as an integer, on line \(number + 1) of \(addressingModesFileName!).")
                 return
             }
             
@@ -242,12 +243,12 @@ func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
                 
                 if line.hasPrefix(" ") {
                     guard currentOpCode != nil else {
-                        print("No current op-code on line \(number + 1) of \(opCodePrototypesFileName!).")
+                        errorStream.writeln("No current op-code on line \(number + 1) of \(opCodePrototypesFileName!).")
                         return
                     }
                     
                     guard fields.count >= 2 else {
-                        print("Unable to parse line \(number + 1) of \(opCodePrototypesFileName!).")
+                        errorStream.writeln("Unable to parse line \(number + 1) of \(opCodePrototypesFileName!).")
                         return
                     }
                     
@@ -258,7 +259,7 @@ func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
                     continuation(id, currentOpCode!, String(fields[1]))
                 } else {
                     guard fields.count >= 3 else {
-                        print("Unable to parse line \(number + 1) of \(opCodePrototypesFileName!).")
+                        errorStream.writeln("Unable to parse line \(number + 1) of \(opCodePrototypesFileName!).")
                         return
                     }
                     

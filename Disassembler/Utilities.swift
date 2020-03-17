@@ -41,4 +41,8 @@ struct FileHandleOutputStream: TextOutputStream {
         }
         fileHandle.write(data)
     }
+    
+    func writeln(_ string: String) {
+        write(string + "\n")
+    }
 }

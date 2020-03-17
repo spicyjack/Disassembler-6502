@@ -33,10 +33,12 @@ struct Disassembler: ParsableCommand {
     var addressingModesFileName: String?
     
     func run() throws {
+        var errorStream = FileHandleOutputStream(fileHandle: FileHandle.standardError)
         var userConfiguration = UserConfiguration(fileName: fileName)
         
         guard let parsedStartAddress = fromHex(address: startAddress) else {
-            throw ValidationError("Unable to parse start address \(startAddress).")
+            errorStream.writeln("Unable to parse start address \(startAddress).")
+            return
         }
         userConfiguration.startAddress = parsedStartAddress
         
@@ -46,7 +48,9 @@ struct Disassembler: ParsableCommand {
             }
         }
         
-        userConfiguration.opCodePrototypes = try fetchOpCodePrototypes(addressingModes: addressingModesFileName, opCodePrototypes: opCodePrototypesFileName)
+        userConfiguration.opCodePrototypes = try fetchOpCodePrototypes(addressingModes: addressingModesFileName,
+                                                                       opCodePrototypes: opCodePrototypesFileName,
+                                                                       errorsTo: &errorStream)
         
         do {
             let data = try Data(contentsOf: URL(fileURLWithPath: fileName))
@@ -54,7 +58,7 @@ struct Disassembler: ParsableCommand {
             
             disassemble(data: data, to: &outputStream, configuration: userConfiguration)
         } catch {
-            print("Unable to read \(fileName).")
+            errorStream.writeln("Unable to read \(fileName).")
         }
     }
 }
@@ -251,7 +255,7 @@ func disassemble(data: Data, to outputStream: inout FileHandleOutputStream, conf
                 outputStream.write(String(format: template, String(format: "$%04x", address)))
             }
         }
-        outputStream.write("\n")
+        outputStream.writeln("")
     }
 }
 
