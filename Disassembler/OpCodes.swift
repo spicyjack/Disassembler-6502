@@ -184,22 +184,21 @@ let defaultOpCodePrototypes: [ UInt8 : OpCodePrototype ] = [ 0x00 : ( name: "BRK
                                                              0xfd : ( name: "SBC", mode: defaultAddressingModes["absoluteX"]! ),
                                                              0xfe : ( name: "INC", mode: defaultAddressingModes["absoluteX"]! ), ]
 
-var addressingModes = [ String: AddressingMode ]()
-var opCodePrototypes = [ UInt8 : OpCodePrototype ]()
-
 func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
                            opCodePrototypes opCodePrototypesFileName: String?) throws -> [ UInt8 : OpCodePrototype ] {
+    var addressingModes = [ String: AddressingMode ]()
+    
     if addressingModesFileName != nil {
         try onEachLine(of: addressingModesFileName!) { number, line in
             let fields = line.split(separator: " ")
             
             guard fields.count >= 3 else {
-                print("Unable to parse line \(number + 1).")
+                print("Unable to parse line \(number + 1) of \(addressingModesFileName!).")
                 return
             }
             
             guard let size = UInt8(String(fields[1])) else {
-                print("Unable to parse \(fields[1]) as an integer.")
+                print("Unable to parse \(fields[1]) as an integer, on line \(number + 1) of \(addressingModesFileName!).")
                 return
             }
             
@@ -234,6 +233,7 @@ func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
     }
     
     if opCodePrototypesFileName != nil {
+        var opCodePrototypes = [ UInt8 : OpCodePrototype ]()
         var currentOpCode: String? = nil
 
         try onEachLine(of: opCodePrototypesFileName!) { number, line in
@@ -242,12 +242,12 @@ func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
                 
                 if line.hasPrefix(" ") {
                     guard currentOpCode != nil else {
-                        print("No current op-code on line \(number + 1).")
+                        print("No current op-code on line \(number + 1) of \(opCodePrototypesFileName!).")
                         return
                     }
                     
                     guard fields.count >= 2 else {
-                        print("Unable to parse line \(number + 1).")
+                        print("Unable to parse line \(number + 1) of \(opCodePrototypesFileName!).")
                         return
                     }
                     
@@ -258,7 +258,7 @@ func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
                     continuation(id, currentOpCode!, String(fields[1]))
                 } else {
                     guard fields.count >= 3 else {
-                        print("Unable to parse line \(number + 1).")
+                        print("Unable to parse line \(number + 1) of \(opCodePrototypesFileName!).")
                         return
                     }
                     
@@ -276,11 +276,10 @@ func fetchOpCodePrototypes(addressingModes addressingModesFileName: String?,
                 opCodePrototypes[id] = ( name: name, mode: addressingModes[addressingMode]! )
             }
         }
+        return opCodePrototypes
     } else {
-        opCodePrototypes = defaultOpCodePrototypes
+        return defaultOpCodePrototypes
     }
-    
-    return opCodePrototypes
 }
 
 enum OpCode {
