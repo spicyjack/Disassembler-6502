@@ -45,6 +45,6 @@ LABELS
       L0000: $100a
       L0001: $1000
 ```
-where the target of the `BNE` at address `0x1004` has been replaced by the label `L000`. Note also that the auto-generated label for the target of the `BEQ` at address `0x1008` has changed so as to avoid a name-collision.
+where the target of the `BNE` at address `0x1004` has been replaced by the label `L0000`. Note also that the auto-generated label for the target of the `BEQ` at address `0x1008` has changed so as to avoid a name-collision.
 
 The `--op-code-prototypes-file-name` command-line argument can be used to provide a mapping from numeric op-codes to their symbolic equivalent. See [`Resources/opCodes.in`](Resources/opCodes.in) for an example. Similarly, the `--addressing-modes-file-name` command-line argument can be used to customize the handling of addressing modes. See [`Resources/addressingModes.in`](Resources/addressingModes.in) for an example.
