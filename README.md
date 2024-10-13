@@ -1,3 +1,6 @@
+Note: This project was forked from [the original
+repo](https://github.com/jlegare/Disassembler).
+
 #  Disassembler
 
 This is a simple [disassembler](https://en.wikipedia.org/wiki/Disassembler) for [MOS 6502](https://en.wikipedia.org/wiki/MOS_Technology_6502) [machine language](https://en.wikipedia.org/wiki/Machine_code), written in [Swift](https://en.wikipedia.org/wiki/Swift_(programming_language)). 
