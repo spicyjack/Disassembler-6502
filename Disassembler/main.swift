@@ -25,9 +25,9 @@ struct Disassembler: ParsableCommand {
     @Argument(help: "Specify input file name.")
     var fileName: String
 
-    @Option(default: "0x1000", help: "Define starting address.")
-    var startAddress: String
-    
+    @Option(help: "Define starting address.")
+    var startAddress: String = "0x1000"
+
     @Option(help: "Specify path to op-code prototypes.")
     var opCodePrototypesFileName: String?
     
